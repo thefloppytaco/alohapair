@@ -57,6 +57,20 @@ type by hand and the normal way to learn it (scanning) is disabled.
 How to tell: nRF Connect labels the address **Public** or **Random**. (Or read the first byte — top two
 bits `11`/`01` means random.) AlohaPair flags random-address entries for you.
 
+### Tested devices
+
+| Device | Address | Type | Result |
+|---|---|---|---|
+| Xbox Wireless Controller | `3C:..` | BLE, **public** | ✅ Full gamepad — sticks, triggers, buttons |
+| Logitech MX Master 3 | `F7:..` | BLE, **random** | ❌ Can't connect (random address) |
+| ND104 BT1 keyboard | `CC:..` | BLE, **random** | ❌ Can't connect (random; not a Classic device) |
+| A true **Classic** HID keyboard/mouse | public | Classic BR/EDR | ✅ *should* work (Classic path is open; none tested yet) |
+
+We also confirmed the dead ends so you don't have to: **USB HID** (kernel has `CONFIG_USB_HID` off),
+faking a random address as public (no Android-9 API, and the scanner that would learn the type is
+disabled — not even Shizuku/privileged access helps), and Classic for the BLE keyboard (it never
+appears in a Classic inquiry, while real Classic devices like a TV/washer do).
+
 > Bluetooth speakers/headsets use the *audio* (A2DP) profile, not HID — and this Portal only supports
 > A2DP **Sink**, so it can't output to an external speaker regardless. AlohaPair is for HID accessories.
 
