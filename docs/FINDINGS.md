@@ -59,11 +59,18 @@ requirement.
 
 ## Reconnect reality & the stack-reset fix (resolved)
 
-- **Powered-on-but-bonded ≠ connectable.** A bonded Xbox controller that's merely turned on does
-  *directed* advertising to its last host and this stack can't catch it — both AlohaPair *and* the
-  **stock Settings "connect" fail identically**: HID connect → GATT connect → 30s timeout
-  (`reason=0x0100`, connection-failed-to-establish). So Settings isn't doing anything we aren't; the
-  controller just isn't advertising. **Pairing mode (fast flash) is the reliable way to connect.**
+- **No auto-reconnect — pairing mode is required every session (root cause confirmed).** A
+  powered-on-but-bonded controller never reconnects. Tested four ways, all fail:
+  device-initiated (Portal idle) → nothing; `autoConnect=true` → **zero** connection attempts;
+  armed direct-connect → controller never answers; same on a **freshly-reset** stack → still nothing.
+  Both AlohaPair *and* the **stock Settings "connect" fail identically** (HID→GATT→30s timeout,
+  `reason=0x0100`). **Why:** re-establishing a bonded BLE link normally relies on the central doing
+  **background scanning** with an accept-list — and this Portal's scanning is **disabled** (the same
+  subsystem that can't discover BLE devices). `autoConnect` needs it (so it no-ops); a direct connect
+  doesn't need scanning but only lands while the device advertises *openly*, which a bonded controller
+  only does in **pairing mode (fast flash)** — its long, open advertising window is exactly what
+  `createBond` catches. So: **pair fresh from pairing mode each session.** Not an AlohaPair limit; a
+  Portal hardware/firmware one.
 - **The stack gets stuck after repeated attempts.** Many connect/bond/remove cycles (and a stock
   Settings attempt that leaves a half-open HID entry, "Device already added") wedge the stack:
   fresh bonds then fail in ~300ms with `SMP_FAIL` + `HCI_ERR_CONN_CAUSE_LOCAL_HOST` even with a

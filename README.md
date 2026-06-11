@@ -30,8 +30,19 @@ The kernel then creates a real input device via `uhid`, and Android sees the acc
 1. Install **AlohaPair** on the Portal (sideload the APK, or via the Immortal app store).
 2. Find your accessory's Bluetooth address — install **nRF Connect** (free) on an Android phone, or use
    `bluetoothctl scan on` on Linux. (An iPhone/Mac won't show it — Apple hides BLE addresses.)
-3. In AlohaPair, tap **Add accessory**, enter a name and the address, put the device in pairing mode,
-   and tap **Connect**. Pairing takes ~20 seconds. After that, **Reconnect** brings it back.
+3. In AlohaPair, tap **Add accessory**, enter a name and the address, put the device in **pairing
+   mode (fast flash)**, and tap **Connect**. Pairing takes ~20 seconds; it then works until it powers
+   off. If a connect fails, tap **Reset Bluetooth** and retry.
+
+### You have to pair each session (a Portal limitation)
+
+The Portal **can't auto-reconnect** a Bluetooth device when you just power it back on — so you put it
+in pairing mode and Connect at the start of each session. This isn't an AlohaPair shortcoming: the
+Portal's Bluetooth has **no background scanning**, which is the mechanism phones/PCs use to
+re-establish a bonded link. The stock Settings app can't reconnect them either. We tested it four
+ways (device-initiated, `autoConnect`, armed direct-connect, and on a freshly-reset stack) — a
+powered-on-but-bonded controller never reconnects; only a fresh pair from pairing mode does. It's
+the same disabled-scanner limitation that stops the Portal discovering BLE devices at all.
 
 ## The one big limitation: public-address devices only
 

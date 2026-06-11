@@ -88,21 +88,30 @@ public class BtPair {
         }).start();
     }
 
-    /** Pair (if new) or reconnect (if already bonded). Device must be ON/advertising. */
+    /**
+     * Connect the accessory. On this Portal a bonded device can NOT auto-reconnect on power-on
+     * (BLE background scanning is disabled), so every session you must put it in PAIRING MODE
+     * (fast flash) and we re-pair cleanly — that's the only path the Portal's Bluetooth allows.
+     */
     public void connect(String mac, Listener l) {
         if (!isReady()) { post(l, false, "Bluetooth is off"); return; }
         final BluetoothDevice dev;
         try { dev = adapter.getRemoteDevice(mac); }
         catch (Throwable t) { post(l, false, "Bad address"); return; }
 
-        if (dev.getBondState() == BluetoothDevice.BOND_BONDED) {
-            status(l, "Reconnecting…");
-            attachHid(dev, l);
-            return;
-        }
+        status(l, "Make sure it's in PAIRING MODE (fast flash)…");
+        new Thread(() -> {
+            try {
+                if (dev.getBondState() == BluetoothDevice.BOND_BONDED) {
+                    try { dev.getClass().getMethod("removeBond").invoke(dev); Thread.sleep(2500); } catch (Throwable ignored) {}
+                }
+            } catch (Throwable ignored) {}
+            main.post(() -> doPair(dev, mac, l));
+        }).start();
+    }
 
-        status(l, "Pairing… keep the device in pairing mode");
-        final IntentFilter f = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+    private void doPair(final BluetoothDevice dev, final String mac, final Listener l) {
+        status(l, "Pairing… keep it fast-flashing (~20s)");
         BroadcastReceiver rx = new BroadcastReceiver() {
             boolean done = false;
             @Override public void onReceive(Context c, Intent i) {
@@ -116,17 +125,16 @@ public class BtPair {
                 } else if (st == BluetoothDevice.BOND_NONE && !done) {
                     done = true; try { ctx.unregisterReceiver(this); } catch (Throwable ignored) {}
                     post(l, false, looksRandom(mac)
-                            ? "Pairing failed — this looks like a RANDOM address, which can't connect on this Portal."
-                            : "Pairing failed (is it in pairing mode and in range?)");
+                            ? "Failed — random-address device, can't connect on this Portal."
+                            : "Failed — be sure it's fast-flashing & close, then retry (or tap Reset Bluetooth).");
                 }
             }
         };
-        ctx.registerReceiver(rx, f);
+        ctx.registerReceiver(rx, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
         try {
             try { dev.getClass().getMethod("createBond", int.class).invoke(dev, 2 /* TRANSPORT_LE */); }
             catch (Throwable refl) { dev.createBond(); }
         } catch (Throwable t) { post(l, false, "createBond failed: " + t.getMessage()); }
-        // Safety timeout
         main.postDelayed(() -> { try { ctx.unregisterReceiver(rx); } catch (Throwable ignored) {} }, 35000);
     }
 

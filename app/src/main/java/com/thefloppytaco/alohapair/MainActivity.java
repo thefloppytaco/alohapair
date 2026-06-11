@@ -59,8 +59,22 @@ public class MainActivity extends Activity {
         TextView sub = new TextView(this);
         sub.setText("Bluetooth accessories for revived Meta Portals");
         sub.setTextColor(Color.GRAY);
-        sub.setPadding(0, 0, 0, dp(16));
+        sub.setPadding(0, 0, 0, dp(10));
         root.addView(sub);
+
+        TextView tip = new TextView(this);
+        tip.setText("Note: this Portal can't auto-reconnect Bluetooth devices, so each session you put "
+                + "your accessory in pairing mode (fast flash) and tap Connect. It then works until it "
+                + "powers off.");
+        tip.setTextColor(0xFF8A6D00);
+        tip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        tip.setPadding(dp(12), dp(10), dp(12), dp(10));
+        tip.setBackgroundColor(0xFFFFF3D6);
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        tlp.bottomMargin = dp(16);
+        tip.setLayoutParams(tlp);
+        root.addView(tip);
 
         list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
@@ -172,8 +186,8 @@ public class MainActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         Button connect = new Button(this);
-        connect.setText(bonded ? "Reconnect" : "Connect");
-        connect.setEnabled(!random || bonded);
+        connect.setText("Connect");
+        connect.setEnabled(!random);
         connect.setOnClickListener(v -> {
             status.setTextColor(Color.DKGRAY);
             status.setText("Working…");
@@ -184,7 +198,6 @@ public class MainActivity extends Activity {
                     status.setText((ok ? "● " : "") + detail);
                     status.setTextColor(ok ? 0xFF1B7F2A : 0xFFB00020);
                     connect.setEnabled(true);
-                    if (ok) connect.setText("Reconnect");
                 }
             });
         });
@@ -260,12 +273,15 @@ public class MainActivity extends Activity {
           + "Important: this Portal can only connect to PUBLIC-address devices (e.g. an Xbox Wireless "
           + "Controller). RANDOM-address devices (most modern mice, Apple Magic, many keyboards) can't "
           + "be reached on this hardware — a limitation of the Portal's Bluetooth, not AlohaPair.\n\n"
-          + "To connect: put the device in PAIRING MODE (e.g. an Xbox controller: hold the pair button "
-          + "until it flashes fast), then tap Connect. Pairing can take ~20 seconds. A bonded device "
-          + "that's merely powered on often won't advertise to the Portal, so pairing mode is the "
-          + "reliable way.\n\n"
-          + "If a connect keeps failing, tap “Reset Bluetooth” and try again — after several attempts the "
-          + "Portal's Bluetooth can get stuck, and a reset clears it.";
+          + "Connecting (every session): put the device in PAIRING MODE — e.g. an Xbox controller: hold "
+          + "the pair button on top until it flashes FAST — then tap Connect. It takes ~20 seconds, and "
+          + "the controller then works until it powers off.\n\n"
+          + "Why every session? The Portal's Bluetooth can't do background scanning, so it can't "
+          + "auto-reconnect a device when you just power it on (the stock Settings can't either). Pairing "
+          + "mode is the one path its Bluetooth allows. Simply turning a paired controller back on will "
+          + "NOT reconnect it — that's a Portal hardware limit, not AlohaPair.\n\n"
+          + "If a connect fails, tap “Reset Bluetooth” and try again — after a few attempts the Portal's "
+          + "Bluetooth can get stuck, and a reset clears it.";
         new AlertDialog.Builder(this).setTitle("Finding a device address").setMessage(msg)
                 .setPositiveButton("Got it", null).show();
     }
