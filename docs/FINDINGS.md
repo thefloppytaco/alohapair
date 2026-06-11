@@ -57,12 +57,21 @@ peripherals (most modern mice incl. Logitech MX, Apple Magic devices, many BLE k
 addresses and **won't** connect on this Portal. A BLE accessory advertising a *public* address is the
 requirement.
 
-## Open questions to test next
-- **Auto-reconnect:** the controller did NOT auto-reconnect after power-cycle, and the stock Settings
-  "connect" fails — so the Immortal feature must own reconnect (re-run our connect on the bonded
-  device while it advertises). Confirm whether a bonded-device `HidHost.connect()` while it's
-  advertising is enough, vs a full re-bond.
-- Whether `BTN_MODE` (Xbox/Guide button) and rumble are exposed.
+## Reconnect reality & the stack-reset fix (resolved)
+
+- **Powered-on-but-bonded ≠ connectable.** A bonded Xbox controller that's merely turned on does
+  *directed* advertising to its last host and this stack can't catch it — both AlohaPair *and* the
+  **stock Settings "connect" fail identically**: HID connect → GATT connect → 30s timeout
+  (`reason=0x0100`, connection-failed-to-establish). So Settings isn't doing anything we aren't; the
+  controller just isn't advertising. **Pairing mode (fast flash) is the reliable way to connect.**
+- **The stack gets stuck after repeated attempts.** Many connect/bond/remove cycles (and a stock
+  Settings attempt that leaves a half-open HID entry, "Device already added") wedge the stack:
+  fresh bonds then fail in ~300ms with `SMP_FAIL` + `HCI_ERR_CONN_CAUSE_LOCAL_HOST` even with a
+  strong signal (rssi −47). **Toggling Bluetooth off/on clears it**, after which a pairing-mode
+  connect succeeds in ~6 seconds. AlohaPair ships a **Reset Bluetooth** button for exactly this.
+- **Verified live:** after a reset + pairing-mode connect, the Xbox controller streams both sticks
+  (`ABS_X/Y`, `ABS_Z/RZ`) and buttons (`BTN_*`) — full gamepad, `Device 6: Xbox Wireless Controller`,
+  `0005:045E:0B13`.
 
 ## Repro tooling
 `com.immortal.probe` `BtActivity` does all of the above. Launch:

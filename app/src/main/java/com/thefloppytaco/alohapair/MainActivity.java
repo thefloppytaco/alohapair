@@ -70,6 +70,15 @@ public class MainActivity extends Activity {
         add.setOnClickListener(v -> addDialog());
         root.addView(add);
 
+        Button reset = new Button(this);
+        reset.setText("Reset Bluetooth  (fixes stuck pairing)");
+        reset.setOnClickListener(v -> {
+            reset.setEnabled(false);
+            reset.setText("Resetting Bluetooth…");
+            bt.resetBluetooth(() -> { reset.setEnabled(true); reset.setText("Reset Bluetooth  (fixes stuck pairing)"); render(); toast("Bluetooth reset — try connecting again."); });
+        });
+        root.addView(reset);
+
         Button help = new Button(this);
         help.setText("How do I find my device's address?");
         help.setOnClickListener(v -> helpDialog());
@@ -251,8 +260,12 @@ public class MainActivity extends Activity {
           + "Important: this Portal can only connect to PUBLIC-address devices (e.g. an Xbox Wireless "
           + "Controller). RANDOM-address devices (most modern mice, Apple Magic, many keyboards) can't "
           + "be reached on this hardware — a limitation of the Portal's Bluetooth, not AlohaPair.\n\n"
-          + "To connect: put the device in pairing mode (or just turn it on, if already paired), then tap "
-          + "Connect. Pairing can take ~20 seconds.";
+          + "To connect: put the device in PAIRING MODE (e.g. an Xbox controller: hold the pair button "
+          + "until it flashes fast), then tap Connect. Pairing can take ~20 seconds. A bonded device "
+          + "that's merely powered on often won't advertise to the Portal, so pairing mode is the "
+          + "reliable way.\n\n"
+          + "If a connect keeps failing, tap “Reset Bluetooth” and try again — after several attempts the "
+          + "Portal's Bluetooth can get stuck, and a reset clears it.";
         new AlertDialog.Builder(this).setTitle("Finding a device address").setMessage(msg)
                 .setPositiveButton("Got it", null).show();
     }

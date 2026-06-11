@@ -54,6 +54,19 @@ public class BtPair {
 
     public boolean isReady() { return adapter != null && adapter.isEnabled(); }
 
+    /**
+     * Cycle the Bluetooth adapter off and on. After many failed connect attempts the Portal's
+     * stack can get stuck (SMP_FAIL / local-host-terminated); a reset reliably clears it.
+     */
+    public void resetBluetooth(Runnable done) {
+        new Thread(() -> {
+            try {
+                if (adapter != null) { adapter.disable(); Thread.sleep(2800); adapter.enable(); Thread.sleep(4500); }
+            } catch (Throwable ignored) {}
+            main.post(done);
+        }).start();
+    }
+
     /** A MAC whose first octet has its top two bits set is a (static/private) random address. */
     public static boolean looksRandom(String mac) {
         try {
