@@ -86,7 +86,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## Background / discovery notes
 
 The full reverse-engineering write-up — why BLE scanning fails, the public-vs-random finding, the live
-Xbox-controller proof — lives in [`docs/FINDINGS.md`](docs/FINDINGS.md).
+Xbox-controller proof — lives in [`docs/FINDINGS.md`](docs/FINDINGS.md). For the complete,
+blow-by-blow technical record of the whole investigation (every command, error code, and dead end),
+see [`docs/INVESTIGATION-LOG.md`](docs/INVESTIGATION-LOG.md).
 
 ## License
 
